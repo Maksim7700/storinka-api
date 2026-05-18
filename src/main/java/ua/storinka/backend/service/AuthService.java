@@ -1,7 +1,9 @@
 package ua.storinka.backend.service;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
+import org.springframework.mail.MailException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -16,12 +18,14 @@ import ua.storinka.backend.repository.UserRepository;
 import ua.storinka.backend.security.JwtService;
 
 @Service
+@Slf4j
 @RequiredArgsConstructor
 public class AuthService {
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
+    private final EmailVerificationService emailVerificationService;
 
     @Transactional
     public AuthResponse register(RegisterRequest req) {
@@ -34,6 +38,13 @@ public class AuthService {
                 .fullName(req.fullName())
                 .phone(req.phone())
                 .build());
+        try {
+            emailVerificationService.issueAndSend(user);
+        } catch (MailException e) {
+            // Don't block registration if mail service is unreachable;
+            // user can be resent a verification email later.
+            log.warn("Failed to send verification email to {}: {}", user.getEmail(), e.getMessage());
+        }
         return new AuthResponse(jwtService.generate(user.getId(), user.getEmail()), UserDto.from(user));
     }
 
