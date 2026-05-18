@@ -28,6 +28,21 @@ spring:
     locations: classpath:db/migration
     baseline-on-migrate: true
 
+  mail:
+    host: ${MAIL_HOST}
+    port: ${MAIL_PORT:587}
+    username: ${MAIL_USERNAME}
+    password: ${MAIL_PASSWORD}
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+          connectiontimeout: 5000
+          timeout: 5000
+          writetimeout: 5000
+
 server:
   port: ${SERVER_PORT:8080}
 
@@ -35,6 +50,11 @@ app:
   jwt:
     secret: ${JWT_SECRET}
     expiration: ${JWT_EXPIRATION:604800000}
+  mail:
+    from: ${MAIL_FROM:noreply@storinka.ua}
+  url:
+    backend: ${APP_BACKEND_URL:http://localhost:8080}
+    frontend: ${APP_FRONTEND_URL:http://localhost:3000}
 
 logging:
   level:
