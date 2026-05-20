@@ -7,6 +7,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 import ua.storinka.backend.dto.CheckSubdomainResponse;
 import ua.storinka.backend.dto.CreateSiteRequest;
+import ua.storinka.backend.dto.PublicSiteDto;
 import ua.storinka.backend.dto.SiteDetailsDto;
 import ua.storinka.backend.dto.SiteSummaryDto;
 import ua.storinka.backend.dto.UpdateContentRequest;
@@ -14,6 +15,7 @@ import ua.storinka.backend.entity.Template;
 import ua.storinka.backend.entity.User;
 import ua.storinka.backend.entity.UserSite;
 import ua.storinka.backend.enums.Role;
+import ua.storinka.backend.enums.SiteStatus;
 import ua.storinka.backend.repository.TemplateRepository;
 import ua.storinka.backend.repository.UserSiteRepository;
 
@@ -95,6 +97,28 @@ public class SiteService {
     }
 
     @Transactional
+    public SiteDetailsDto publish(Long id, User currentUser) {
+        UserSite site = siteRepository
+                .findByIdAndUserIdWithTemplate(id, currentUser.getId())
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND, "Site not found"));
+        // Payment flow is deferred; publish just flips status. When billing
+        // arrives this method will gate ACTIVE behind a paid subscription.
+        site.setStatus(SiteStatus.ACTIVE);
+        return SiteDetailsDto.from(site);
+    }
+
+    @Transactional
+    public SiteDetailsDto unpublish(Long id, User currentUser) {
+        UserSite site = siteRepository
+                .findByIdAndUserIdWithTemplate(id, currentUser.getId())
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND, "Site not found"));
+        site.setStatus(SiteStatus.DRAFT);
+        return SiteDetailsDto.from(site);
+    }
+
+    @Transactional
     public void delete(Long id, User currentUser) {
         UserSite site = siteRepository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(
@@ -104,6 +128,14 @@ public class SiteService {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Not your site");
         }
         siteRepository.delete(site);
+    }
+
+    @Transactional(readOnly = true)
+    public PublicSiteDto findPublicBySubdomain(String subdomain) {
+        return siteRepository.findActiveBySubdomainWithTemplate(subdomain)
+                .map(PublicSiteDto::from)
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND, "Site not found or not published"));
     }
 
     public CheckSubdomainResponse checkSubdomain(String value) {

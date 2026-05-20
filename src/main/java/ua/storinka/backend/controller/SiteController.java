@@ -6,6 +6,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -59,6 +60,18 @@ public class SiteController {
                                          @Valid @RequestBody UpdateContentRequest req,
                                          @AuthenticationPrincipal User currentUser) {
         return siteService.updateContent(id, req, currentUser);
+    }
+
+    @PatchMapping("/{id}/publish")
+    public SiteDetailsDto publish(@PathVariable Long id,
+                                   @AuthenticationPrincipal User currentUser) {
+        return siteService.publish(id, currentUser);
+    }
+
+    @PatchMapping("/{id}/unpublish")
+    public SiteDetailsDto unpublish(@PathVariable Long id,
+                                     @AuthenticationPrincipal User currentUser) {
+        return siteService.unpublish(id, currentUser);
     }
 
     @DeleteMapping("/{id}")

@@ -28,4 +28,13 @@ public interface UserSiteRepository extends JpaRepository<UserSite, Long> {
             @Param("userId") Long userId);
 
     boolean existsBySubdomain(String subdomain);
+
+    @org.springframework.data.jpa.repository.Query("""
+            SELECT s FROM UserSite s
+            JOIN FETCH s.template
+            WHERE s.subdomain = :subdomain
+              AND s.status = ua.storinka.backend.enums.SiteStatus.ACTIVE
+            """)
+    Optional<UserSite> findActiveBySubdomainWithTemplate(
+            @org.springframework.data.repository.query.Param("subdomain") String subdomain);
 }
