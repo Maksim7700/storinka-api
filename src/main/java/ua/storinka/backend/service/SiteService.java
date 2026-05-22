@@ -11,6 +11,7 @@ import ua.storinka.backend.dto.PublicSiteDto;
 import ua.storinka.backend.dto.SiteDetailsDto;
 import ua.storinka.backend.dto.SiteSummaryDto;
 import ua.storinka.backend.dto.UpdateContentRequest;
+import ua.storinka.backend.dto.UpdateSubdomainRequest;
 import ua.storinka.backend.entity.Template;
 import ua.storinka.backend.entity.User;
 import ua.storinka.backend.entity.UserSite;
@@ -86,6 +87,43 @@ public class SiteService {
     }
 
     @Transactional
+    public SiteDetailsDto updateSubdomain(Long id, UpdateSubdomainRequest req, User currentUser) {
+        UserSite site = siteRepository
+                .findByIdAndUserIdWithTemplate(id, currentUser.getId())
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND, "Site not found"));
+
+        // Subdomain is only mutable while the site is in DRAFT. Once paid (ACTIVE)
+        // or paused/inactive, the subdomain is part of the published identity and
+        // changing it would break inbound links and indexed URLs.
+        if (site.getStatus() != SiteStatus.DRAFT) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT,
+                    "Subdomain can only be changed while the site is a draft");
+        }
+
+        String newSubdomain = req.subdomain();
+        if (newSubdomain.equals(site.getSubdomain())) {
+            // No-op — return current state without hitting the uniqueness check.
+            return SiteDetailsDto.from(site);
+        }
+        if (!SUBDOMAIN_PATTERN.matcher(newSubdomain).matches()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "Invalid subdomain format");
+        }
+        if (RESERVED_SUBDOMAINS.contains(newSubdomain)) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT,
+                    "Subdomain is reserved");
+        }
+        if (siteRepository.existsBySubdomain(newSubdomain)) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT,
+                    "Subdomain is already taken");
+        }
+
+        site.setSubdomain(newSubdomain);
+        return SiteDetailsDto.from(site);
+    }
+
+    @Transactional
     public SiteDetailsDto updateContent(Long id, UpdateContentRequest req, User currentUser) {
         UserSite site = siteRepository
                 .findByIdAndUserIdWithTemplate(id, currentUser.getId())
@@ -114,7 +152,10 @@ public class SiteService {
                 .findByIdAndUserIdWithTemplate(id, currentUser.getId())
                 .orElseThrow(() -> new ResponseStatusException(
                         HttpStatus.NOT_FOUND, "Site not found"));
-        site.setStatus(SiteStatus.DRAFT);
+        // Voluntary pause keeps the paid subscription intact, so the owner
+        // can resume without paying again. Going back to DRAFT would lose
+        // that semantic distinction.
+        site.setStatus(SiteStatus.SUSPENDED);
         return SiteDetailsDto.from(site);
     }
 
