@@ -20,6 +20,7 @@ import ua.storinka.backend.dto.CreateSiteRequest;
 import ua.storinka.backend.dto.SiteDetailsDto;
 import ua.storinka.backend.dto.SiteSummaryDto;
 import ua.storinka.backend.dto.UpdateContentRequest;
+import ua.storinka.backend.dto.UpdateSubdomainRequest;
 import ua.storinka.backend.entity.User;
 import ua.storinka.backend.service.SiteService;
 
@@ -60,6 +61,13 @@ public class SiteController {
                                          @Valid @RequestBody UpdateContentRequest req,
                                          @AuthenticationPrincipal User currentUser) {
         return siteService.updateContent(id, req, currentUser);
+    }
+
+    @PatchMapping("/{id}/subdomain")
+    public SiteDetailsDto updateSubdomain(@PathVariable Long id,
+                                          @Valid @RequestBody UpdateSubdomainRequest req,
+                                          @AuthenticationPrincipal User currentUser) {
+        return siteService.updateSubdomain(id, req, currentUser);
     }
 
     @PatchMapping("/{id}/publish")
