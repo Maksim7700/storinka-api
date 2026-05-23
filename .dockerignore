@@ -1,0 +1,9 @@
+target/
+.idea/
+.vscode/
+.git/
+.env
+.env.local
+*.env.local
+.mvn/wrapper/maven-wrapper.jar
+HELP.md
