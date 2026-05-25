@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 import ua.storinka.backend.dto.AuthResponse;
+import ua.storinka.backend.dto.GoogleAuthRequest;
 import ua.storinka.backend.dto.LoginRequest;
 import ua.storinka.backend.dto.RegisterRequest;
 import ua.storinka.backend.service.AuthService;
@@ -39,6 +40,11 @@ public class AuthController {
     @PostMapping("/login")
     public AuthResponse login(@Valid @RequestBody LoginRequest req) {
         return authService.login(req);
+    }
+
+    @PostMapping("/google")
+    public AuthResponse google(@Valid @RequestBody GoogleAuthRequest req) {
+        return authService.googleAuth(req.idToken(), req.intent());
     }
 
     @GetMapping("/verify-email")
