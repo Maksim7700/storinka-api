@@ -55,6 +55,10 @@ app:
   url:
     backend: ${APP_BACKEND_URL:http://localhost:8080}
     frontend: ${APP_FRONTEND_URL:http://localhost:3000}
+  google:
+    # Audience expected on the Google ID token. Empty in dev = endpoint will
+    # 401 — set this when wiring up Google sign-in.
+    client-id: ${GOOGLE_CLIENT_ID:}
 
 logging:
   level:

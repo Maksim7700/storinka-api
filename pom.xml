@@ -51,6 +51,16 @@
 			<artifactId>spring-boot-starter-mail</artifactId>
 		</dependency>
 
+		<!-- Google ID token verification for POST /api/auth/google.
+		     Only ID token verification is used (frontend gets the token via
+		     Google Identity Services), so we don't need the OAuth2 client
+		     starter — just the lightweight google-api-client. -->
+		<dependency>
+			<groupId>com.google.api-client</groupId>
+			<artifactId>google-api-client</artifactId>
+			<version>2.7.0</version>
+		</dependency>
+
 		<dependency>
 			<groupId>io.jsonwebtoken</groupId>
 			<artifactId>jjwt-api</artifactId>
