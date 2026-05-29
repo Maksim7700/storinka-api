@@ -5,6 +5,11 @@ spring:
   config:
     import: optional:file:./.env[.properties]
 
+  servlet:
+    multipart:
+      max-file-size: 5MB
+      max-request-size: 5MB
+
   datasource:
     url: ${SPRING_DATASOURCE_URL}
     username: ${SPRING_DATASOURCE_USERNAME}
@@ -47,6 +52,10 @@ server:
   port: ${SERVER_PORT:8080}
 
 app:
+  uploads:
+    # Local directory for uploaded files (images for sites). MVP-only —
+    # will be swapped for S3 / R2 in prod. Override via APP_UPLOADS_DIR.
+    dir: ${APP_UPLOADS_DIR:./uploads}
   jwt:
     secret: ${JWT_SECRET}
     expiration: ${JWT_EXPIRATION:604800000}

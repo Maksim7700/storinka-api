@@ -36,3 +36,6 @@ build/
 .env
 .env.local
 *.env.local
+
+### Uploaded files (local dev storage — swap for S3 in prod) ###
+uploads/
