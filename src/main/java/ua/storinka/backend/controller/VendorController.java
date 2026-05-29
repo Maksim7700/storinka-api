@@ -6,7 +6,10 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import ua.storinka.backend.dto.PublicSiteDto;
+import ua.storinka.backend.dto.SitemapEntryDto;
 import ua.storinka.backend.service.SiteService;
+
+import java.util.List;
 
 /**
  * Public-facing endpoints that anonymous visitors hit when they open a
@@ -23,5 +26,12 @@ public class VendorController {
     @GetMapping("/{subdomain}/site")
     public PublicSiteDto getSite(@PathVariable String subdomain) {
         return siteService.findPublicBySubdomain(subdomain);
+    }
+
+    /** List all published sites — consumed by the frontend's sitemap.xml
+     *  generator. Public; returns only subdomain + updatedAt. */
+    @GetMapping("/sitemap")
+    public List<SitemapEntryDto> sitemap() {
+        return siteService.listSitemapEntries();
     }
 }

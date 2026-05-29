@@ -37,4 +37,14 @@ public interface UserSiteRepository extends JpaRepository<UserSite, Long> {
             """)
     Optional<UserSite> findActiveBySubdomainWithTemplate(
             @org.springframework.data.repository.query.Param("subdomain") String subdomain);
+
+    /** All ACTIVE sites for sitemap.xml generation. Returns only the fields
+     *  needed by the sitemap (subdomain + updatedAt) — no JOIN FETCH to keep
+     *  it cheap when the table grows. */
+    @Query("""
+            SELECT s FROM UserSite s
+            WHERE s.status = ua.storinka.backend.enums.SiteStatus.ACTIVE
+            ORDER BY s.updatedAt DESC
+            """)
+    List<UserSite> findAllActive();
 }

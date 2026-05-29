@@ -10,6 +10,7 @@ import ua.storinka.backend.dto.CreateSiteRequest;
 import ua.storinka.backend.dto.PublicSiteDto;
 import ua.storinka.backend.dto.SiteDetailsDto;
 import ua.storinka.backend.dto.SiteSummaryDto;
+import ua.storinka.backend.dto.SitemapEntryDto;
 import ua.storinka.backend.dto.UpdateContentRequest;
 import ua.storinka.backend.dto.UpdateSubdomainRequest;
 import ua.storinka.backend.entity.Template;
@@ -177,6 +178,15 @@ public class SiteService {
                 .map(PublicSiteDto::from)
                 .orElseThrow(() -> new ResponseStatusException(
                         HttpStatus.NOT_FOUND, "Site not found or not published"));
+    }
+
+    /** All ACTIVE sites for sitemap.xml. Public — no auth required. */
+    @Transactional(readOnly = true)
+    public List<SitemapEntryDto> listSitemapEntries() {
+        return siteRepository.findAllActive()
+                .stream()
+                .map(SitemapEntryDto::from)
+                .toList();
     }
 
     public CheckSubdomainResponse checkSubdomain(String value) {
