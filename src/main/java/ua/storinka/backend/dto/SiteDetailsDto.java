@@ -16,6 +16,8 @@ public record SiteDetailsDto(
         String templateName,
         String templateThumbnailUrl,
         Map<String, Object> contentJson,
+        String gscVerification,
+        String gaMeasurementId,
         Instant createdAt,
         Instant updatedAt
 ) {
@@ -30,6 +32,8 @@ public record SiteDetailsDto(
                 s.getTemplate().getName(),
                 s.getTemplate().getThumbnailUrl(),
                 s.getContentJson(),
+                s.getGscVerification(),
+                s.getGaMeasurementId(),
                 s.getCreatedAt(),
                 s.getUpdatedAt()
         );

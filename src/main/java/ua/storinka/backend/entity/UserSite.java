@@ -58,6 +58,17 @@ public class UserSite {
     @Column(name = "custom_domain", length = 255)
     private String customDomain;
 
+    /** Google Search Console verification code (HTML-tag method). Rendered
+     *  as `<meta name="google-site-verification" content="...">` so the owner
+     *  can claim the property in GSC and see search analytics. */
+    @Column(name = "gsc_verification", length = 128)
+    private String gscVerification;
+
+    /** Google Analytics 4 measurement ID, e.g. `G-XXXXXXXXXX`. When present
+     *  the public site loads the gtag script and reports pageviews. */
+    @Column(name = "ga_measurement_id", length = 32)
+    private String gaMeasurementId;
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 32)
     @Builder.Default
