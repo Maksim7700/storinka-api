@@ -12,6 +12,7 @@ import ua.storinka.backend.dto.SiteDetailsDto;
 import ua.storinka.backend.dto.SiteSummaryDto;
 import ua.storinka.backend.dto.SitemapEntryDto;
 import ua.storinka.backend.dto.UpdateContentRequest;
+import ua.storinka.backend.dto.UpdateSeoSettingsRequest;
 import ua.storinka.backend.dto.UpdateSubdomainRequest;
 import ua.storinka.backend.entity.Template;
 import ua.storinka.backend.entity.User;
@@ -133,6 +134,25 @@ public class SiteService {
         site.setContentJson(req.contentJson());
         // @UpdateTimestamp + JPA dirty checking refreshes updated_at on flush.
         return SiteDetailsDto.from(site);
+    }
+
+    @Transactional
+    public SiteDetailsDto updateSeoSettings(Long id, UpdateSeoSettingsRequest req, User currentUser) {
+        UserSite site = siteRepository
+                .findByIdAndUserIdWithTemplate(id, currentUser.getId())
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND, "Site not found"));
+        // Empty string = clear. We store null so the JPA mapping and the
+        // frontend's `verification.google` check both treat "absent" uniformly.
+        site.setGscVerification(blankToNull(req.gscVerification()));
+        site.setGaMeasurementId(blankToNull(req.gaMeasurementId()));
+        return SiteDetailsDto.from(site);
+    }
+
+    private static String blankToNull(String s) {
+        if (s == null) return null;
+        String trimmed = s.trim();
+        return trimmed.isEmpty() ? null : trimmed;
     }
 
     @Transactional
