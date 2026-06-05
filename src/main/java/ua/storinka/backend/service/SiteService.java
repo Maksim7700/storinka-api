@@ -24,6 +24,7 @@ import ua.storinka.backend.repository.UserSiteRepository;
 
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.regex.Pattern;
 
@@ -125,15 +126,43 @@ public class SiteService {
         return SiteDetailsDto.from(site);
     }
 
+    // Hard caps for content JSON — prevent abuse (10M-char paste bloating jsonb).
+    // Per-value covers a single text field; total covers degenerate many-field cases.
+    private static final int MAX_CONTENT_VALUE_LENGTH = 2000;
+    private static final int MAX_CONTENT_TOTAL_LENGTH = 20_000;
+
     @Transactional
     public SiteDetailsDto updateContent(Long id, UpdateContentRequest req, User currentUser) {
         UserSite site = siteRepository
                 .findByIdAndUserIdWithTemplate(id, currentUser.getId())
                 .orElseThrow(() -> new ResponseStatusException(
                         HttpStatus.NOT_FOUND, "Site not found"));
+        validateContentSize(req.contentJson());
         site.setContentJson(req.contentJson());
         // @UpdateTimestamp + JPA dirty checking refreshes updated_at on flush.
         return SiteDetailsDto.from(site);
+    }
+
+    private static void validateContentSize(Map<String, Object> content) {
+        int total = 0;
+        for (Map.Entry<String, Object> entry : content.entrySet()) {
+            Object v = entry.getValue();
+            if (v instanceof String s) {
+                if (s.length() > MAX_CONTENT_VALUE_LENGTH) {
+                    throw new ResponseStatusException(
+                            HttpStatus.BAD_REQUEST,
+                            "Поле \"" + entry.getKey() + "\" задовге (макс. "
+                                    + MAX_CONTENT_VALUE_LENGTH + " символів)");
+                }
+                total += s.length();
+            }
+        }
+        if (total > MAX_CONTENT_TOTAL_LENGTH) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "Загальний розмір контенту перевищує ліміт ("
+                            + MAX_CONTENT_TOTAL_LENGTH + " символів)");
+        }
     }
 
     @Transactional
