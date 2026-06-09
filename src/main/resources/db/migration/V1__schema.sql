@@ -1,6 +1,7 @@
 -- Storinka — V1: schema (DDL only).
--- Mirrors ТД v3, section 3. All CREATE TABLE / CREATE INDEX statements live
--- here; seed data goes into V2+ (one migration per template).
+-- Single source-of-truth for the initial database shape. Earlier versions
+-- introduced `user_sites.gsc_verification` / `ga_measurement_id` as a follow-up
+-- migration (V4); they are folded in here so a fresh DB starts at one file.
 
 CREATE TABLE users (
     id             BIGSERIAL    PRIMARY KEY,
@@ -32,16 +33,22 @@ CREATE TABLE templates (
     created_at    TIMESTAMPTZ    NOT NULL DEFAULT NOW()
 );
 
+-- SEO / analytics settings (gsc_verification, ga_measurement_id) live as
+-- dedicated columns rather than inside content_json: they are platform-level
+-- integrations whose lifecycle differs from editable template content, and
+-- keeping them in columns makes them queryable for analytics dashboards.
 CREATE TABLE user_sites (
-    id            BIGSERIAL   PRIMARY KEY,
-    user_id       BIGINT      NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-    template_id   BIGINT      NOT NULL REFERENCES templates(id),
-    subdomain     VARCHAR(63) UNIQUE NOT NULL,
-    content_json  JSONB       NOT NULL DEFAULT '{}',
-    custom_domain VARCHAR(255),
-    status        VARCHAR(32) NOT NULL DEFAULT 'DRAFT',
-    created_at    TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    updated_at    TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    id                BIGSERIAL   PRIMARY KEY,
+    user_id           BIGINT      NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    template_id       BIGINT      NOT NULL REFERENCES templates(id),
+    subdomain         VARCHAR(63) UNIQUE NOT NULL,
+    content_json      JSONB       NOT NULL DEFAULT '{}',
+    custom_domain     VARCHAR(255),
+    status            VARCHAR(32) NOT NULL DEFAULT 'DRAFT',
+    gsc_verification  VARCHAR(128),
+    ga_measurement_id VARCHAR(32),
+    created_at        TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at        TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
 CREATE TABLE email_verification_tokens (
